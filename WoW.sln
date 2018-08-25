@@ -1,0 +1,23 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "WoWAuctionApi", "WoWAuctionApi\WoWAuctionApi.fsproj", "{E3D85BA5-B5F7-421D-8441-D7EB57500976}"
+EndProject
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "Auctioneer", "Auctioneer\Auctioneer.fsproj", "{63957493-9F71-4565-A62D-7228B5268875}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E3D85BA5-B5F7-421D-8441-D7EB57500976}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3D85BA5-B5F7-421D-8441-D7EB57500976}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3D85BA5-B5F7-421D-8441-D7EB57500976}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3D85BA5-B5F7-421D-8441-D7EB57500976}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63957493-9F71-4565-A62D-7228B5268875}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63957493-9F71-4565-A62D-7228B5268875}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63957493-9F71-4565-A62D-7228B5268875}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63957493-9F71-4565-A62D-7228B5268875}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
