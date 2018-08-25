@@ -1,6 +1,4 @@
-﻿
-open WoWAuctionApi
-open System
+﻿open WoWAuctionApi
 
 [<EntryPoint>]
 let main argv =
@@ -8,4 +6,4 @@ let main argv =
     |> Async.RunSynchronously
     |> List.map (fun ad -> List.length ad.Auctions)
     |> List.iter (printfn "%d")
-    0 // return an integer exit code
+    0
