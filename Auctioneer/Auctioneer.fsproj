@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Checker.fs" />
+    <Compile Include="Auctioneer.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
