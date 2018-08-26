@@ -1,5 +1,8 @@
 ﻿namespace Auctioneer
 
+type Realm = string
+type InsertionTime = int64
+
 module Option =
 
     let apply (a : 'a option) (f : ('a -> 'b) option) =
@@ -11,41 +14,41 @@ module InsertionCheck =
 
     type private InsertionMessage =
         | FetchLastInsertion
-        | IsValidInsertion of (int64 * AsyncReplyChannel<bool>)
-        | UpdateLastInsertion of int64
+        | IsValidInsertion of (Realm * InsertionTime * AsyncReplyChannel<bool>)
+        | UpdateLastInsertion of (Realm * InsertionTime)
 
     let private agent =
         MailboxProcessor<InsertionMessage>.Start(fun inbox ->
-            let rec loop (lastInsert : int64 option) =
+            let rec loop (lastInsert : Map<Realm, InsertionTime>) =
                 async {
                     let! message = inbox.Receive ()
                     match message with
                     | FetchLastInsertion ->
-                        //Go to the database, grab the last insert
+                        //Go to the database, grab the last insert for each realm
                         return! loop lastInsert
-                    | IsValidInsertion (currentInsert, channel) ->
-                        match lastInsert with
+                    | IsValidInsertion (realm, currentInsert, channel) ->
+                        match Map.tryFind realm lastInsert with
                         | None -> channel.Reply true
                         | Some v ->
                             v < currentInsert
                             |> channel.Reply
                         return! loop lastInsert
-                    | UpdateLastInsertion currentInsert ->
+                    | UpdateLastInsertion (realm, currentInsert) ->
                         //Push this insert into the database, if it fails -> add a message to retry
-                        let v =
-                            Option.map max lastInsert
-                            |> Option.apply (Some currentInsert)
-                            |> Option.defaultValue currentInsert
-                        return! loop (Some v)
+                        match Map.tryFind realm lastInsert with
+                        | None ->
+                            return! loop <| Map.add realm currentInsert lastInsert
+                        | Some v ->
+                            return! loop <| Map.add realm (max v currentInsert) lastInsert
                 }
-            loop None
+            loop Map.empty
         )
 
     let fetchLatest () =
         agent.Post FetchLastInsertion
 
-    let isNewInsertion (modificationTime : int64) =
-        agent.PostAndAsyncReply (fun c -> IsValidInsertion (modificationTime, c))
+    let isNewInsertion (realm : Realm) (modificationTime : InsertionTime) =
+        agent.PostAndAsyncReply (fun c -> IsValidInsertion (realm, modificationTime, c))
 
-    let updateLatestInsertion (modificationTime : int64) =
-        agent.Post <| UpdateLastInsertion modificationTime
+    let updateLatestInsertion (realm : Realm) (modificationTime : InsertionTime) =
+        agent.Post <| UpdateLastInsertion (realm, modificationTime)
