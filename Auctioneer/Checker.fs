@@ -2,15 +2,21 @@
 
 type Realm = string
 type InsertionTime = int64
+type 'a Agent = 'a MailboxProcessor
+
+type IInsertionChecker =
+    abstract member FetchLatest : unit -> unit
+    abstract member IsNewInsertion : Realm -> InsertionTime -> Async<bool>
+    abstract member UpdateLatestInsertion : Realm -> InsertionTime -> unit
 
 module InsertionCheck =
 
-    type private InsertionMessage =
+    type internal InsertionMessage =
         | FetchLastInsertion
         | IsValidInsertion of (Realm * InsertionTime * AsyncReplyChannel<bool>)
         | UpdateLastInsertion of (Realm * InsertionTime)
 
-    let private agent = MailboxProcessor<_>.Start(fun inbox ->
+    let internal makeAgent sqlConnectionString = Agent<_>.Start(fun inbox ->
         let rec loop (lastInsert : Map<Realm, InsertionTime>) =
             async {
                 let! message = inbox.Receive ()
@@ -36,11 +42,31 @@ module InsertionCheck =
         loop Map.empty
     )
 
-    let fetchLatest () =
+    let internal fetchLatest (agent : Agent<_>) conStr =
         agent.Post FetchLastInsertion
 
-    let isNewInsertion (realm : Realm) (modificationTime : InsertionTime) =
+    let internal isNewInsertion
+        (agent : Agent<_>)
+        (realm : Realm)
+        (modificationTime : InsertionTime)
+        =
         agent.PostAndAsyncReply (fun c -> IsValidInsertion (realm, modificationTime, c))
 
-    let updateLatestInsertion (realm : Realm) (modificationTime : InsertionTime) =
+    let internal updateLatestInsertion
+        (agent : Agent<_>)
+        (realm : Realm)
+        (modificationTime : InsertionTime)
+        =
         agent.Post <| UpdateLastInsertion (realm, modificationTime)
+
+    let make (connectionString : string) =
+        let agent = makeAgent connectionString
+
+        { new IInsertionChecker with
+            member __.FetchLatest () =
+                fetchLatest agent ()
+            member __.IsNewInsertion r i =
+                isNewInsertion agent r i
+            member __.UpdateLatestInsertion r i =
+                updateLatestInsertion agent r i
+        }

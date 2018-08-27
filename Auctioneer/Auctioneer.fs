@@ -2,7 +2,7 @@
 
 type 'a Agent = 'a MailboxProcessor
 
-module Downloader =
+module Auction =
 
     type private DownloadMessage =
         | AddRealm of string
